@@ -1,5 +1,7 @@
 package util;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,14 +22,16 @@ public class HttpUtil {
                     URL url = new URL(address);
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod("GET");
-                    connection.setConnectTimeout(8000);
-                    connection.setReadTimeout(8000);
+                    //connection.setConnectTimeout(8000);
+                    //connection.setReadTimeout(8000);
+                    connection.setDoInput(true);
                     InputStream in = connection.getInputStream();
                     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
                     StringBuilder response = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null){
                         response.append(line);
+                        Log.d("YF-HttpUtil", response.toString());
                     }
                     if (listener != null){
                         // 回调onFinish()方法
