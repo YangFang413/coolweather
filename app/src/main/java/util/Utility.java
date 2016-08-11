@@ -1,7 +1,15 @@
 package util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import java.io.StringReader;
 
 import database.CoolWeatherDB;
 import model.City;
@@ -9,7 +17,7 @@ import model.County;
 import model.Province;
 
 /**
- * 解析和处理服务器返回的省级数据
+ * 解析和处理服务器返回的省级数据、市级数据、县级数据及XML数据
  * Created by Administrator on 2016/8/1.
  */
 public class Utility {
@@ -79,6 +87,62 @@ public class Utility {
             }
         }
         return false;
+    }
+
+    // 解析从服务器端返回的XML数据
+    public static void parseWeatherXMLWithPull (Context context, String response){
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xmlPullParser = factory.newPullParser();
+            xmlPullParser.setInput(new StringReader(response));
+            int eventType = xmlPullParser.getEventType();
+            String cityName = ""; // 存放当前查询的城市名
+            String temp1 = ""; // 存放温度1
+            String temp2 = ""; // 存放温度2
+            String weather = ""; // 存放天气情况
+            String updateTime = ""; // 更新时间
+            String currentTime = ""; // 当前时间
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String nodeName = xmlPullParser.getName();
+                switch (eventType) {
+                    // 开始解析某个结点
+                    case XmlPullParser.START_TAG: {
+                        if ("city".equals(nodeName)) {
+                            cityName = xmlPullParser.nextText();
+                        } else if ("status1".equals(nodeName)) {
+                            weather = xmlPullParser.nextText();
+                        } else if ("temperature1".equals(nodeName)) {
+                            temp1 = xmlPullParser.nextText();
+                        } else if ("temperature2".equals(nodeName)) {
+                            temp2 = xmlPullParser.nextText();
+                        } else if ("udatetime".equals(nodeName)) {
+                            String[] array = xmlPullParser.nextText().split(" ");
+                            updateTime = array[1];
+                            currentTime = array[0];
+                        }
+                        break;
+                    }
+                    // 完成解析某个结点
+                    case XmlPullParser.END_TAG: {
+                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+                        editor.putBoolean("city_selected", true);
+                        editor.putString("city_name", cityName);
+                        editor.putString("temp1", temp1);
+                        editor.putString("temp2", temp2);
+                        editor.putString("weather", weather);
+                        editor.putString("update_time", updateTime);
+                        editor.putString("current_date", currentTime);
+                        editor.commit();
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                eventType = xmlPullParser.next();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 }

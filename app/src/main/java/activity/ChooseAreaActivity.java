@@ -2,6 +2,7 @@ package activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -72,6 +73,12 @@ public class ChooseAreaActivity extends Activity {
                 } else if (currentLevel == LEVEL_CITY){
                     selectedCity = cityList.get(position);
                     queryCounties();  // 加载县级数据
+                } else if (currentLevel == LEVEL_COUNTY){
+                    String countyCode = countyList.get(position).getCountyCode();
+                    Intent intent = new Intent(ChooseAreaActivity.this, WeatherActivity.class);
+                    intent.putExtra("county_code", countyCode);
+                    startActivity(intent);
+                    finish();
                 }
             }
         });
@@ -199,8 +206,6 @@ public class ChooseAreaActivity extends Activity {
     }
 
     // 捕获Back按键，根据当前的级别来判断，此时应该返回市列表、省列表还是直接退出。
-
-
     @Override
     public void onBackPressed() {
         if (currentLevel == LEVEL_COUNTY){

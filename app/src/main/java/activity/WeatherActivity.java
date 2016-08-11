@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -25,7 +26,7 @@ import util.Utility;
  * Created by Administrator on 2016/8/11.
  * 显示天气
  */
-public class WeatherActivity extends Activity {
+public class WeatherActivity extends Activity implements View.OnClickListener {
 
     private CoolWeatherDB coolWeatherDB;
 
@@ -36,6 +37,8 @@ public class WeatherActivity extends Activity {
     private TextView temp1Text; // 用于显示气温1
     private TextView temp2Text; // 用于显示气温2
     private TextView currentDateText; // 用于显示当前日期
+    private Button switchCity; // 切换城市按钮
+    private Button refreshWeather; // 更新天气按钮
 
     @Override
     protected void onCreate(Bundle saveInstanceState){
@@ -51,6 +54,12 @@ public class WeatherActivity extends Activity {
         temp1Text = (TextView) findViewById(R.id.temp1);
         temp2Text = (TextView) findViewById(R.id.temp2);
         currentDateText = (TextView) findViewById(R.id.current_data);
+        switchCity = (Button) findViewById(R.id.swithch_city);
+        refreshWeather = (Button) findViewById(R.id.refresh_weather);
+
+        // 设置监听器
+        switchCity.setOnClickListener(this);
+        refreshWeather.setOnClickListener(this);
 
         String countyCode = getIntent().getStringExtra("county_code");
         coolWeatherDB = CoolWeatherDB.getInstance(this);
@@ -61,19 +70,47 @@ public class WeatherActivity extends Activity {
             weatherInfoLayout.setVisibility(View.INVISIBLE);
             cityNameText.setVisibility(View.INVISIBLE);
             String countyName = coolWeatherDB.queryCountyName(countyCode);
-            String countyGBCode = "";
-            try {
-                // byte[] sour = countyName.getBytes("utf-8");
-                // countyGBCode = new String(sour, "gb2312");
-                countyGBCode = java.net.URLEncoder.encode(countyName, "gb2312");
-                Log.d("WeatherActivity-2", countyGBCode);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            String countyGBCode = EncodingCountyCode(countyName);
             queryWeather(countyGBCode);
         } else {
             // 没有县级代号就直接显示本地天气
             showWeather();
+        }
+    }
+
+    // 将中文编码的城市名称转换成GB2312编码
+    private String EncodingCountyCode(String countyName){
+        String countyGBCode = "";
+        try {
+            countyGBCode = java.net.URLEncoder.encode(countyName, "gb2312");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return countyGBCode;
+    }
+
+    @Override
+    public void onClick(View v){
+        switch (v.getId()){
+            case R.id.swithch_city:
+                Intent intent = new Intent(this, ChooseAreaActivity.class);
+                intent.putExtra("from_weather_activity", true);
+                startActivity(intent);
+                finish();
+                break;
+            case R.id.refresh_weather:
+                publishText.setText("同步中。。。");
+                weatherInfoLayout.setVisibility(View.INVISIBLE);
+                cityNameText.setVisibility(View.INVISIBLE);
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                String cityName = preferences.getString("city_name", "");
+                if (! TextUtils.isEmpty(cityName)) {
+                    queryWeather(EncodingCountyCode(cityName));
+                    showWeather();
+                }
+                break;
+            default:
+                break;
         }
     }
 

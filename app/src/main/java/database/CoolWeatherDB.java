@@ -133,4 +133,17 @@ public class CoolWeatherDB {
         return list;
     }
 
+    public String queryCountyName(String countyCode){
+        Cursor cursor = db.query("County", null, "county_code = ?", new String[]{countyCode}, null, null, null);
+        String countyName = "";
+        if (cursor.moveToFirst()){
+            do {
+                countyName = cursor.getString(cursor.getColumnIndex("county_name"));
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null){
+            cursor.close();
+        }
+        return countyName;
+    }
 }
