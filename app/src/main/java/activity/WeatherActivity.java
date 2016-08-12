@@ -17,6 +17,7 @@ import com.yf.coolweather.R;
 
 import java.io.UnsupportedEncodingException;
 
+import Service.AutoUpdateService;
 import database.CoolWeatherDB;
 import util.HttpCallbackListener;
 import util.HttpUtil;
@@ -134,6 +135,8 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
         currentDateText.setText(preferences.getString("current_date", ""));
         weatherInfoLayout.setVisibility(View.VISIBLE);
         cityNameText.setVisibility(View.VISIBLE);
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
 
     }
 
